@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Policy Assistant</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 28px;
+        }
+        .container {
+            max-width: 850px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .button-container button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .submit-button {
+            background: #007BFF;
+            color: white;
+        }
+        .submit-button:hover {
+            background: #0056b3;
+        }
+        .clear-button {
+            background: #dc3545;
+            color: white;
+        }
+        .clear-button:hover {
+            background: #a71d2a;
+        }
+        .download-button {
+            background: #28a745;
+            color: white;
+        }
+        .download-button:hover {
+            background: #218838;
+        }
+        .output {
+            display: block;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 6px solid #007BFF;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Smart Policy Assistant: Simplify, Summarize, & Strategize!</h1>
+
+    <div class="container">
+        
+        <!-- File Upload Form -->
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Upload a Policy Document:</label>
+                <input type="file" name="file" accept=".pdf,.txt">
+            </div>
+            <div class="form-group">
+                <label for="wordCount">Select Word Count:</label>
+                <select name="wordCount">
+                    <option value="50">50 words</option>
+                    <option value="100" selected>100 words</option>
+                    <option value="200">200 words</option>
+                    <option value="300">300 words</option>
+                </select>
+            </div>
+            <div class="button-container">
+                <button type="submit" class="submit-button">Summarize</button>
+            </div>
+        </form>
+
+        <!-- Scenario Input Form -->
+        <form method="POST">
+            <div class="form-group">
+                <label for="scenario">Enter Scenario:</label>
+                <textarea name="scenario" rows="4"></textarea>
+            </div>
+            <div class="button-container">
+                <button type="submit" class="submit-button">Generate Policy</button>
+                <button type="button" class="clear-button" id="clearBtn">Clear Output</button>
+            </div>
+        </form>
+
+        <!-- Summarized Policy Output -->
+        {% if summary %}
+            <div id="summaryOutput" class="output">
+                <h2>Summarized Policy</h2>
+                <div class="policy-content" id="summaryText">
+                    {{ summary }}
+                </div>
+                <div class="button-container">
+                    <button type="button" class="download-button" id="copySummaryBtn">Copy to Clipboard</button>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Generated Policy Output -->
+        {% if policy %}
+            <div id="policyOutput" class="output">
+                <h2>Generated Policy</h2>
+                <div class="policy-content" id="policyText">
+                    {{ policy }}
+                </div>
+                <div class="button-container">
+                    <button type="button" class="download-button" id="downloadBtn">Download Policy</button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Clear button functionality
+            let clearBtn = document.getElementById("clearBtn");
+            if (clearBtn) {
+                clearBtn.addEventListener("click", function() {
+                    let summarySection = document.getElementById("summaryOutput");
+                    let policySection = document.getElementById("policyOutput");
+
+                    if (summarySection) summarySection.style.display = "none";
+                    if (policySection) policySection.style.display = "none";
+                });
+            }
+
+            // Download policy button
+            let downloadBtn = document.getElementById("downloadBtn");
+            if (downloadBtn) {
+                downloadBtn.addEventListener("click", function() {
+                    let policyText = document.getElementById("policyText").innerText;
+                    let blob = new Blob([policyText], { type: "text/plain" });
+                    let link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "Generated_Policy.txt";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            }
+
+            // Copy summary to clipboard
+            let copySummaryBtn = document.getElementById("copySummaryBtn");
+            if (copySummaryBtn) {
+                copySummaryBtn.addEventListener("click", function() {
+                    let summaryText = document.getElementById("summaryText").innerText;
+                    navigator.clipboard.writeText(summaryText).then(() => {
+                        copySummaryBtn.innerText = "Copied!";
+                        setTimeout(() => copySummaryBtn.innerText = "Copy to Clipboard", 1500);
+                    }).catch(err => {
+                        console.error("Failed to copy: ", err);
+                    });
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
